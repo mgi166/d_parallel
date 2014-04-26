@@ -11,7 +11,6 @@ class DParallel
   def initialize(enum, num)
     @enum  = enum
     @tuple = Rinda::TupleSpace.new(600)
-    start_service
   end
 
   def each
@@ -19,7 +18,7 @@ class DParallel
   end
 
   def map(&block)
-    p uri
+    start_service
 
     client = Client.new(uri)
 
@@ -34,6 +33,7 @@ class DParallel
   end
 
   def start_service
+    DRb.stop_service
     DRb.start_service(nil, @tuple)
   end
 
