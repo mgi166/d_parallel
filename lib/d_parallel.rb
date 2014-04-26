@@ -20,12 +20,12 @@ class DParallel
 
   def map(&block)
     p uri
-    @enum.each do |e|
-      @tuple.write([:pre_call, e, block])
-    end
 
     [].tap do |result|
-      result << @tuple.take([:after_call, nil, nil])
+      @enum.each do |e|
+        @tuple.write([:pre_call, e, block])
+        result << block_call.last
+      end
     end
   end
 
@@ -37,7 +37,7 @@ class DParallel
     DRb.uri
   end
 
-  def call
+  def block_call
     label, e, block = @tuple.take [:pre_call, nil, Proc]
     called = block.call(e)
     @tuple.write [:after_call, e, called]
