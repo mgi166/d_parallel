@@ -22,13 +22,11 @@ class DParallel
 
     client = Client.new(uri)
 
-    [].tap do |array|
-      @enum.each do |e|
-        @tuple.write [:pre_call, e, block]
-        client.call_block
-        result = @tuple.take [:after_call, e, nil]
-        array << result.last.tapp
-      end
+    @enum.map do |e|
+      @tuple.write [:pre_call, e, block]
+      client.call_block
+      result = @tuple.take [:after_call, e, nil]
+      result.last
     end
   end
 
