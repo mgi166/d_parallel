@@ -11,8 +11,14 @@ class DParallel
 
   def each
     return @enum unless block_given?
+  end
 
+  def map
     @enum.each do |e|
+      @tuple.write [:pre_call, e, block]
+    end
+
+    [].tap do |result|
     end
   end
 
@@ -22,5 +28,11 @@ class DParallel
 
   def uri
     DRb.uri
+  end
+
+  def call
+    label, e, block = @tuple.take [:pre_call, e, block]
+    called = block.call(e)
+    @tuple.write [:after_call, e, called]
   end
 end
