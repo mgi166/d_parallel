@@ -10,6 +10,7 @@ class DParallel
   attr_accessor :enum, :tuple
   def initialize(enum, num)
     @enum  = enum
+    @num   = num
     @tuple = Rinda::TupleSpace.new(600)
   end
 
@@ -20,7 +21,7 @@ class DParallel
   def map(&block)
     start_service
 
-    client = Client.new(uri)
+    client = Client.new(uri, @num)
 
     @enum.map do |e|
       @tuple.write [:pre_call, e, block]
@@ -40,15 +41,30 @@ class DParallel
   end
 
   class Client
-    def initialize(uri)
+    def initialize(uri, num)
       DRb.start_service
       @tuple = DRbObject.new_with_uri(uri)
+      @num   = num
     end
 
     def call_block
+      _fork do
+        _call
+      end
+    end
+
+    def _call
       _, e, block = @tuple.take [:pre_call, nil, Proc]
       called = block.call(e)
       @tuple.write [:after_call, e, called]
+    end
+
+    def _fork(&block)
+      @num.times do
+        Process.fork do
+          yield
+        end
+      end
     end
   end
 end
