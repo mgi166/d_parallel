@@ -14,19 +14,15 @@ class DParallel
     @tuple = Rinda::TupleSpace.new(600)
   end
 
-  def each
-    return @enum unless block_given?
-  end
-
   def map(&block)
     start_service
 
-    client = Client.new(uri, @num)
+    client = Client.new(@tuple, @num)
 
     @enum.map do |e|
-      @tuple.write [:pre_call, e, block]
+      @tuple.tap{|x| p x.__id__}.write [:pre_call, e, block]
       client.call_block
-      result = @tuple.take [:after_call, e, nil]
+      result = @tuple.take [:after_call, e, nil], 1
       result.last
     end
   end
@@ -41,9 +37,9 @@ class DParallel
   end
 
   class Client
-    def initialize(uri, num)
+    def initialize(tuple, num)
       DRb.start_service
-      @tuple = DRbObject.new_with_uri(uri)
+      @tuple = DRbObject.new(tuple)
       @num   = num
     end
 
@@ -54,7 +50,7 @@ class DParallel
     end
 
     def _call
-      _, e, block = @tuple.take [:pre_call, nil, Proc]
+      _, e, block = @tuple.tap{|x| p x.__id__}.take [:pre_call, nil, Proc]
       called = block.call(e)
       @tuple.write [:after_call, e, called]
     end
