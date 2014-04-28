@@ -17,12 +17,13 @@ class DParallel
   def map(&block)
     start_service
 
+    @tuple.extend(DRbUndumped)
     client = Client.new(@tuple, @num)
 
     @enum.map do |e|
       @tuple.tap{|x| p x.__id__}.write [:pre_call, e, block]
       client.call_block
-      result = @tuple.take [:after_call, e, nil], 1
+      result = @tuple.take [:after_call, e, nil]
       result.last
     end
   end
@@ -38,9 +39,12 @@ class DParallel
 
   class Client
     def initialize(tuple, num)
+      @num = num
+
       DRb.start_service
-      @tuple = DRbObject.new(tuple)
-      @num   = num
+      # ts = DRbObject.new(tuple)
+      # @tuple = Rinda::TupleSpaceProxy.new(ts)
+      @tuple = tuple
     end
 
     def call_block
