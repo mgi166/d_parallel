@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'drb/drb'
 require 'rinda/tuplespace'
 require 'tapp'
@@ -11,19 +12,18 @@ class DParallel
   def initialize(enum, num)
     @enum  = enum
     @num   = num
-    @tuple = Rinda::TupleSpace.new(600)
+    @tuple = Rinda::TupleSpace.new(180)
   end
 
   def map(&block)
     start_service
 
-    @tuple.extend(DRbUndumped)
     client = Client.new(@tuple, @num)
 
     @enum.map do |e|
-      @tuple.tap{|x| p x.__id__}.write [:pre_call, e, block]
+      @tuple.write [:pre_call, e, block]
       client.call_block
-      result = @tuple.take [:after_call, e, nil]
+      result = @tuple.take([:after_call, e, nil], 3)
       result.last
     end
   end
@@ -39,25 +39,23 @@ class DParallel
 
   class Client
     def initialize(tuple, num)
-      @num = num
-
-      DRb.start_service
-      # ts = DRbObject.new(tuple)
-      # @tuple = Rinda::TupleSpaceProxy.new(ts)
+      @num   = num
       @tuple = tuple
     end
 
     def call_block
+      tuple = DRbObject.new(@tuple)
+
       _fork do
-        _call
+        DRb.start_service
+
+        _, e, block = tuple.take([:pre_call, nil, Proc])
+        called = block.call(e)
+        tuple.write [:after_call, e, called]
       end
     end
 
-    def _call
-      _, e, block = @tuple.tap{|x| p x.__id__}.take [:pre_call, nil, Proc]
-      called = block.call(e)
-      @tuple.write [:after_call, e, called]
-    end
+    private
 
     def _fork(&block)
       @num.times do
