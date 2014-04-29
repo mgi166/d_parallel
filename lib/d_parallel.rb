@@ -40,7 +40,7 @@ class DParallel
   class Client
     def initialize(tuple, num)
       @num   = num
-      @tuple = DRbObject.new(tuple)
+      @tuple = Rinda::TupleSpaceProxy.new(DRbObject.new(tuple))
     end
 
     def call_block
