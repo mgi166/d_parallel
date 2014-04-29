@@ -40,22 +40,24 @@ class DParallel
   class Client
     def initialize(tuple, num)
       @num   = num
-      @tuple = tuple
+      @tuple = DRbObject.new(tuple)
     end
 
     def call_block
-      tuple = DRbObject.new(@tuple)
-
       _fork do
-        DRb.start_service
-
-        _, e, block = tuple.take([:pre_call, nil, Proc])
-        called = block.call(e)
-        tuple.write [:after_call, e, called]
+        _call
       end
     end
 
     private
+
+    def _call
+      DRb.start_service
+
+      _, e, block = @tuple.take([:pre_call, nil, Proc])
+      called = block.call(e)
+      @tuple.write [:after_call, e, called] rescue nil
+    end
 
     def _fork(&block)
       @num.times do
