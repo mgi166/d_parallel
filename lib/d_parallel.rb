@@ -16,9 +16,11 @@ class DParallel
   end
 
   def map(&block)
+    start_service
+    d_obj = DRbObject.new(@tuple)
     pid = fork do
-      proxy = Rinda::TupleSpaceProxy.new(DRbObject.new(@tuple))
       start_service
+      proxy = Rinda::TupleSpaceProxy.new(d_obj)
       @enum.each do |e|
         proxy.write [:after, e, block.call(e)] rescue nil
       end
