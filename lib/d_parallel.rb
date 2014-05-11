@@ -16,15 +16,17 @@ class DParallel
   end
 
   def map(&block)
-    start_service
-
-    client = Client.new(@tuple, @num)
+    pid = fork do
+      proxy = Rinda::TupleSpaceProxy.new(DRbObject.new(@tuple))
+      start_service
+      @enum.each do |e|
+        proxy.write [:after, e, block.call(e)] rescue nil
+      end
+    end
 
     @enum.map do |e|
-      @tuple.write [:pre_call, e, block]
-      client.call_block
-      result = @tuple.take([:after_call, e, nil], 3)
-      result.last
+      _, _, result = @tuple.read [:after, e, nil]
+      result
     end
   end
 
@@ -35,36 +37,5 @@ class DParallel
 
   def uri
     DRb.uri
-  end
-
-  class Client
-    def initialize(tuple, num)
-      @num   = num
-      @tuple = Rinda::TupleSpaceProxy.new(DRbObject.new(tuple))
-    end
-
-    def call_block
-      _fork do
-        _call
-      end
-    end
-
-    private
-
-    def _call
-      DRb.start_service
-
-      _, e, block = @tuple.take([:pre_call, nil, Proc])
-      called = block.call(e)
-      @tuple.write [:after_call, e, called] rescue nil
-    end
-
-    def _fork(&block)
-      @num.times do
-        Process.fork do
-          yield
-        end
-      end
-    end
   end
 end
