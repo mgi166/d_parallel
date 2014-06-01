@@ -15,6 +15,14 @@ class DParallel
     @tuple = Rinda::TupleSpace.new(180)
   end
 
+  def each(&block)
+    start_service
+    pids = create_process(&block)
+
+    pids.each {|id| Process.waitpid(id) }
+    @enum
+  end
+
   def map(&block)
     start_service
 

@@ -9,6 +9,15 @@ describe DParallel do
     end
   end
 
+  describe '#each' do
+    subject { d_parallel.each{|x| x*2 } }
+    let(:d_parallel) { described_class.new([1,2,3], 2) }
+
+    it 'should be @enum instance' do
+      should == [1,2,3]
+    end
+  end
+
   describe '#map' do
     describe 'when square elements in block' do
       subject { d_parallel.map{|x| x*2 } }
