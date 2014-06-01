@@ -3,12 +3,22 @@ require 'spec_helper'
 describe DParallel do
   describe '#new' do
     describe 'if arguments are valid' do
-      subject { described_class.new(enum, num) }
-
-      let(:enum) { [1,2,3] }
-      let(:num)  { 3 }
+      subject { described_class.new([1,2,3], 3) }
 
       it { should be_instance_of DParallel }
+    end
+  end
+
+  describe '#map' do
+    describe 'when square elements in block' do
+      subject { d_parallel.map{|x| x*2 } }
+      let(:d_parallel) { described_class.new([1,2,3], 3) }
+
+      it { should be_instance_of Array }
+
+      it 'elements should be square' do
+        should == [2, 4, 6]
+      end
     end
   end
 end
