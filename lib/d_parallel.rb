@@ -17,27 +17,43 @@ class DParallel
 
   def map(&block)
     start_service
-    d_obj = DRbObject.new(@tuple)
-    pid = fork do
+
+    pids = create_process(&block)
+    collect_result(pids)
+  end
+
+  private
+
+  def collect_result(pid)
+    @enum.map do |e|
+      _, _, result = @tuple.read [:after, e, nil]
+      result
+    end.tap do
+      pid.each {|id| Process.waitpid(id) }
+    end
+  end
+
+  def create_process(&block)
+    raise 'The number of fork process is over than 0' if @num.to_i.zero?
+
+    Array.new(@num) do
+      fork_process(@d_obj, &block)
+    end
+  end
+
+  def fork_process(d_obj, &block)
+    Process.fork do
       start_service
       proxy = Rinda::TupleSpaceProxy.new(d_obj)
       @enum.each do |e|
         proxy.write [:after, e, block.call(e)] rescue nil
       end
     end
-
-    @enum.map do |e|
-      _, _, result = @tuple.read [:after, e, nil]
-      result
-    end
   end
 
   def start_service
     DRb.stop_service
     DRb.start_service(nil, @tuple)
-  end
-
-  def uri
-    DRb.uri
+    @d_obj = DRbObject.new(@tuple)
   end
 end

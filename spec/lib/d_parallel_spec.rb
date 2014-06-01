@@ -16,7 +16,7 @@ describe DParallel do
 
       it { should be_instance_of Array }
 
-      it 'elements should be square' do
+      it 'elements should be squared' do
         should == [2, 4, 6]
       end
     end
@@ -27,8 +27,34 @@ describe DParallel do
 
       it { should be_instance_of Array }
 
-      it 'elements should be square' do
+      it 'elements should be squared' do
         should == (1..100).to_a
+      end
+    end
+  end
+
+  describe '#create_process' do
+    subject { d_parallel.send(:create_process) {|x| x} }
+    let(:d_parallel) { described_class.new([1,2,3], 3) }
+
+    it 'should return Array' do
+      d_parallel.stub(:fork_process)
+      should be_instance_of Array
+    end
+
+    it 'should call #fork_process @num times' do
+      d_parallel.should_receive(:fork_process).exactly(3)
+      subject
+    end
+
+    context 'when @num is zero' do
+      subject { d_parallel.send(:create_process) {|x| x} }
+      let(:d_parallel) { described_class.new([1,2,3], 0) }
+
+      it 'should raise exception' do
+        expect do
+          subject
+        end.to raise_error RuntimeError, 'The number of fork process is over than 0'
       end
     end
   end
