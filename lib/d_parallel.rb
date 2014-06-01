@@ -34,6 +34,8 @@ class DParallel
   end
 
   def create_process(&block)
+    raise 'The number of fork process is over than 0' if @num.to_i.zero?
+
     Array.new(@num) do
       fork_process(@d_obj, &block)
     end

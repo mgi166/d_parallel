@@ -46,5 +46,16 @@ describe DParallel do
       d_parallel.should_receive(:fork_process).exactly(3)
       subject
     end
+
+    context 'when @num is zero' do
+      subject { d_parallel.send(:create_process) {|x| x} }
+      let(:d_parallel) { described_class.new([1,2,3], 0) }
+
+      it 'should raise exception' do
+        expect do
+          subject
+        end.to raise_error RuntimeError, 'The number of fork process is over than 0'
+      end
+    end
   end
 end
