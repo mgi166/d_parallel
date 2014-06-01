@@ -16,7 +16,7 @@ describe DParallel do
 
       it { should be_instance_of Array }
 
-      it 'elements should be square' do
+      it 'elements should be squared' do
         should == [2, 4, 6]
       end
     end
@@ -27,7 +27,7 @@ describe DParallel do
 
       it { should be_instance_of Array }
 
-      it 'elements should be square' do
+      it 'elements should be squared' do
         should == (1..100).to_a
       end
     end
