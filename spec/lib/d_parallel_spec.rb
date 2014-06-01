@@ -10,11 +10,29 @@ describe DParallel do
   end
 
   describe '#each' do
-    subject { d_parallel.each{|x| x*2 } }
-    let(:d_parallel) { described_class.new([1,2,3], 2) }
+    describe 'return' do
+      subject { d_parallel.each{|x| x*2 } }
+      let(:d_parallel) { described_class.new([1,2,3], 2) }
 
-    it 'should be @enum instance' do
-      should == [1,2,3]
+      it 'should be @enum instance' do
+        should == [1,2,3]
+      end
+    end
+
+    describe 'when push array in block' do
+      subject do
+        [].tap do |array|
+          d_parallel.each do |x|
+            array << x*2
+          end
+        end
+      end
+
+      let(:d_parallel) { described_class.new([1,2,3], 2) }
+
+      it 'should be squared' do
+        should == [2,4,6]
+      end
     end
   end
 

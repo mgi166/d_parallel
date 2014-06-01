@@ -6,6 +6,7 @@ require 'tapp'
 #=TEST
 # pry -r './lib/d_parallel'
 # d = DParallel.new([1,2,3], 1); d.map{|i| i * 2}
+# d = DParallel.new([1,2,3], 1); [].tap {|x| d.each{|i| x << (i * 2)} }
 #
 class DParallel
   attr_accessor :enum, :tuple
@@ -16,11 +17,13 @@ class DParallel
   end
 
   def each(&block)
-    start_service
-    pids = create_process(&block)
+    enum = Enumerator.new do |yielder|
+      @enum.each do |i|
+        yielder.yield yield(i)
+      end
+    end
 
-    pids.each {|id| Process.waitpid(id) }
-    @enum
+    enum.each(&block)
   end
 
   def map(&block)
