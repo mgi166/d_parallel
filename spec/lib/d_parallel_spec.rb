@@ -20,5 +20,16 @@ describe DParallel do
         should == [2, 4, 6]
       end
     end
+
+    describe 'when enum object is large' do
+      subject { d_parallel.map{|x| x } }
+      let(:d_parallel) { described_class.new((1..100).to_a, 2) }
+
+      it { should be_instance_of Array }
+
+      it 'elements should be square' do
+        should == (1..100).to_a
+      end
+    end
   end
 end
