@@ -30,9 +30,8 @@ describe DParallel do
 
       let(:d_parallel) { described_class.new([1,2,3], 2) }
 
-      it 'should be squared' do
-        should == [2,4,6]
-      end
+      # Call block(Array#<< method call) in forked process so that Array of current process remain unchanged
+      it { should be_empty }
     end
   end
 

@@ -17,13 +17,10 @@ class DParallel
   end
 
   def each(&block)
-    enum = Enumerator.new do |yielder|
-      @enum.each do |i|
-        yielder.yield yield(i)
-      end
-    end
+    start_service
 
-    enum.each(&block)
+    create_process(&block)
+    @enum
   end
 
   def map(&block)
