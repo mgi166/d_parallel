@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+require 'd_parallel/version'
 require 'drb/drb'
 require 'rinda/tuplespace'
 require 'tapp'
